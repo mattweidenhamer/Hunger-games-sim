@@ -1,0 +1,207 @@
+:: StoryTitle
+Sugarcube HGS
+
+
+:: StoryData
+{
+  "ifid": "6276100C-23D6-42FA-BF39-8D37900A62E3",
+  "format": "SugarCube",
+  "format-version": "2.36.1",
+  "start": "Home Screen",
+  "tag-colors": {
+    "Code-passage": "blue"
+  },
+  "zoom": 1
+}
+
+
+:: Character Config {"position":"650,175","size":"100,100"}
+Change and configure your characters here!
+<<set $viewedCharacter = null>>
+
+<<for _index, _character range $players>>
+	<span sc-eval:id=" _index ">
+	Name: <<print _character.cosmetic.name>>
+    Pronouns: <<print $pronouns[_character.cosmetic.pronouns][0]>>
+    Organizations: 
+    <<print _character.modifiers.organizations.length>>
+    <<if _character.modifiers.organizations.length <= 0>>
+    	No affiliations
+    <<else>>
+    	<<for _i, _organization in _character.modifiers.organizations>>
+        	* _organization
+        <</for>>
+    <</if>>
+        <<button `"Delete " + _character.cosmetic.name `>>
+        	<<remove `"#" + _index`>>
+        <</button>>
+</span>
+<</for>>
+Select a character to modify: <<cycle "$viewedCharacter">>
+	<<for _i = 0; _i <= $players.length; _i++>>
+    	<<option `$players[_i].cosmetic.name` _i>>
+    <</for>>
+<</cycle>>
+
+Add new character:
+
+[[Back to Home->Home Screen]]
+
+
+:: Home Screen {"position":"525,50","size":"100,100"}
+Welcome to Nill's Hunger Games Simulator! Still in early alpha whoops
+
+[[Play]]
+
+[[Configure Organizations->Organization Config]]
+
+[[Configure Characters->Character Config]]
+
+[[Configure Items->Item Config]]
+
+
+
+
+
+
+
+:: Item Config {"position":"400,175","size":"100,100"}
+[[Back to Home->Home Screen]] 
+
+
+:: Item Dictionary Loader [Code-passage init] {"position":"25,275","size":"100,100"}
+/* Store items here in the format
+ItemKey: {
+	ItemName,
+    ItemDesc,
+    ItemTags,
+}
+*/
+/* This is mostly for reference. */
+<<set $itemTags = [
+    "Bow",
+    "Sword",
+    "Spear"
+]>>
+/* Make pool tags as needed to group shared traits */
+/* eg weapon pool checks for if the person has a weapon */
+
+
+<<set $itemDict = {
+
+}>>
+
+
+:: Load Widget [Code-passage widget] {"position":"150,25","size":"100,100"}
+/* Check that an item has an item tag in its pool. Pass item as first, pool as second. Returns true/false */
+/* i dont think i actually need this whoops... */
+<<widget checkItemInPool>>
+	<<set _found = false>>
+	<<set _itemTags = _args[0].ItemTags>>
+    <<set _pool = _args[1]>>
+    <<if _itemTags.includesAny(_pool)>>
+    	<<set _found = true>>
+    <</if>>
+<</widget>>
+
+/* Call this widget to get the person's pronoun  */
+<<widget she>>
+	<<print $pronouns[_args[0].pronouns][1]>>
+<</widget>>
+
+/* Call this widget to get the person's pronoun  */
+<<widget her>>
+	<<print $pronouns[_args[0].pronouns][2]>>
+<</widget>>
+
+
+
+
+:: Misc Init [init] {"position":"150,275","size":"100,100"}
+<<set $pronouns = [ 
+	["they/them", "they", "them"],
+    ["he/him", "he", "him"],
+    ["she/her", "she", "her"]
+]>>
+
+
+:: Organization Config {"position":"525,175","size":"100,100"}
+[[Back to Home->Home Screen]] 
+
+
+:: Organization Loader [init Code-passage] {"position":"25,150","size":"100,100"}
+/* The name of the Organization should also be the key of the organization. */
+/* Each organization should have three keys in its object: The display name, the flat bonus/malus that any unaligned people get, and then a dictionary of any additional organizations that have a bonus or malus. */
+/* example layout */
+<<set $Organizations = []>>
+<<for _i = 1; _i lt 13; _i++>>
+	<<set $Organizations = $Organizations.concat({
+    	name: "District " + _i,
+        univModifier: 0,
+        internModifier: 20,
+        orgModifiers: []
+    })>>
+<</for>>
+<<for _i, _name range $Organizations>>
+	<<set $Organizations[_i].univModifier to random(-20, 20)>>
+<</for>>
+
+<<print $Organizations[2].univModifier>>
+
+
+
+
+:: Personality Loader [init Code-passage] {"position":"25,25","size":"100,100"}
+<!-- Each personality corresponds to a number on this list. This list should be immutable once the game is loaded.  -->
+<!-- When adding new personalities, include a comment of what effect you think it would have. -->
+<<set $personalities to [
+	"Calm", <!-- Reduce likelihood of being attacked and attacking others, increases bow effectiveness -->
+	"Aggressive", <!-- Increases chance of attacking others and gives a combat bonus when doing so -->	
+    "Isolated", <!-- Discourages hunting and alliances, gives a bonus to avoiding fights -->
+    "Strategical", <!-- Gives additional outcome-stack weight to the largest-weighted positive outcome -->
+]>>
+
+/* Alternate idea: Each Personality type is a list of keywords, and those keywords are predominantly what are checked. Might make it easier to add more down the line. */
+
+
+:: Play {"position":"675,50","size":"100,100"}
+
+
+
+:: StoryAuthor [Code-passage] {"position":"25,550","size":"100,100"}
+Built by NillIsUnavailable
+
+
+:: StoryDisplayTitle [Code-passage] {"position":"150,550","size":"100,100"}
+Nill's Battle Royale Simulator
+
+
+:: StoryInit [Code-passage] {"position":"275,25","size":"100,100"}
+/* Seems to run last, use this for setting up players */
+/* By default, load a randomized selection of players with all traits randomzied */
+<<set $players to []>>
+<<for _i = 1; _i lte 24; _i++>>
+	<<set $players = $players.concat(
+		{
+        	"cosmetic": {
+        	"name":  "Tribute " + _i, 
+            "pronouns": 0,
+            },
+            "modifiers": {
+              "personality": 0,
+              "organizations": [],
+              "backgrounds": [],
+              "afflictions": [],
+              "items": [],
+              "relationships": [],
+            },
+            "stats": {
+            	"health": 3,
+                "hunger": 8,
+                "thirst": 8,
+                "exhaustion": 8,
+                "stress": 0,
+                "pain": 0
+            	}
+            })>>
+<</for>>
